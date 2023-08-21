@@ -94,6 +94,11 @@ function isPostMethod(request: Request): boolean {
 	return request.method === 'POST';
 }
 
+// 检查请求方法是否为 OPTIONS
+function isOptionsMethod(request: Request): boolean {
+	return request.method === 'OPTIONS';
+}
+
 // 检查请求内容是否为 JSON
 function isJsonContent(request: Request): boolean {
 	const contentType = request.headers.get('Content-Type');
@@ -155,6 +160,30 @@ function constructTranslationRequest(sourceLang: string, textList: string[], tar
 
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+		// 检查请求方法是否为 OPTIONS
+		if (isOptionsMethod(request)) {
+			// 构造成功响应
+			const successResponse: SuccessResponse = {
+				code: 200,
+				message: 'OK',
+				data: [],
+			};
+
+			const resBody = JSON.stringify(successResponse);
+			const resHeaders = new Headers({
+				'Content-Type': 'application/json',
+				'Access-Control-Allow-Origin': '*',
+				'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+				'Access-Control-Allow-Headers': 'Content-Type',
+			});
+			const res = new Response(resBody, {
+				status: 200,
+				headers: resHeaders,
+			});
+
+			return res;
+		}
+
 		// 检查请求方法是否为 POST
 		if (!isPostMethod(request)) {
 			const errorResponse: ErrorResponse = {
@@ -260,9 +289,18 @@ export default {
 			data: translationResults,
 		};
 
-		return new Response(JSON.stringify(successResponse), {
-			status: 200,
-			headers: { 'Content-Type': 'application/json' },
+		const resBody = JSON.stringify(successResponse);
+		const resHeaders = new Headers({
+			'Content-Type': 'application/json',
+			'Access-Control-Allow-Origin': '*',
+			'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+			'Access-Control-Allow-Headers': 'Content-Type',
 		});
+		const res = new Response(resBody, {
+			status: 200,
+			headers: resHeaders,
+		});
+
+		return res;
 	},
 };
